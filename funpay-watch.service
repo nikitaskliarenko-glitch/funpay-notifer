@@ -1,0 +1,18 @@
+[Unit]
+Description=FunPay Robux watcher
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=funpay
+WorkingDirectory=/opt/funpay-watch
+EnvironmentFile=/opt/funpay-watch/.env
+ExecStart=/opt/funpay-watch/.venv/bin/python -m funpay_watch
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
