@@ -68,8 +68,12 @@ cd /opt/funpay-watch
 
 sudo apt install -y python3-venv
 /usr/bin/python3 -m venv .venv
-.venv/bin/pip install -r requirements.txt
+.venv/bin/python -m pip install -r requirements.txt
 ```
+
+Вызов `python -m pip` вместо просто `pip` тоже не случаен. На Ubuntu файл
+`.venv/bin/pip` иногда не создаётся, хотя сам pip установлен, и короткая
+команда падает с `No such file or directory`. Через модуль работает всегда.
 
 Путь `/usr/bin/python3` указан полностью не для красоты. Если на сервере стоит
 pyenv, короткое `python3` подсунет интерпретатор из `/root/.pyenv`, а туда
@@ -109,7 +113,7 @@ journalctl -u funpay-watch -n 20
 ## Тесты
 
 ```bash
-.venv/bin/pip install -r requirements-dev.txt
+.venv/bin/python -m pip install -r requirements-dev.txt
 .venv/bin/python -m pytest
 ```
 
