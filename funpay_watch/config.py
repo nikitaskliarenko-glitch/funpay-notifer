@@ -35,7 +35,11 @@ def load_config(env: Mapping[str, str]) -> Config:
     return Config(
         bot_token=token,
         owner_id=owner_id,
-        db_path=Path(env.get("DB_PATH") or "funpay_watch.db"),
+        # Путь разворачиваем в абсолютный сразу. Относительный создавал бы
+        # базу там, откуда запущен процесс, и две копии из разных папок
+        # разошлись бы по разным базам: одна отвечает на команды, другая
+        # рассылает уведомления по умолчаниям, будто фильтры не работают.
+        db_path=Path(env.get("DB_PATH") or "funpay_watch.db").resolve(),
         chips_url=env.get("CHIPS_URL") or CHIPS_URL,
         poll_interval=float(env.get("POLL_INTERVAL") or 30.0),
     )

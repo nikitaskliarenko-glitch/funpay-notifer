@@ -11,12 +11,13 @@ from aiogram.types import LinkPreviewOptions
 from dotenv import load_dotenv
 
 from funpay_watch.bot import build_router
-from funpay_watch.config import load_config
+from funpay_watch.config import Config, load_config
 from funpay_watch.fetcher import FunPayClient
 from funpay_watch.models import Offer
 from funpay_watch.notifier import TelegramNotifier
 from funpay_watch.parser import parse_minimum_order
 from funpay_watch.poller import Poller
+from funpay_watch.single_instance import AlreadyRunning, single_instance
 from funpay_watch.storage import Storage
 from funpay_watch.watcher import Watcher
 
@@ -48,6 +49,18 @@ async def main() -> None:
         # Самая частая ошибка первого запуска. Трейсбек тут ничего не объясняет.
         raise SystemExit(f"Ошибка настройки: {exc}\nЗаполните .env по образцу .env.example.")
 
+    # Замок отсекает вторую копию до того, как она успеет разослать что-нибудь
+    # по своим порогам. Путь к базе пишем в журнал: если копий всё же окажется
+    # две, по этой строке сразу видно, что базы у них разные.
+    try:
+        with single_instance(config.db_path):
+            log.info("база: %s", config.db_path)
+            await run(config)
+    except AlreadyRunning as exc:
+        raise SystemExit(f"Запуск отменён: {exc}")
+
+
+async def run(config: Config) -> None:
     storage = Storage(config.db_path)
     client = FunPayClient(url=config.chips_url)
     bot = Bot(config.bot_token)
