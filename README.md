@@ -52,16 +52,43 @@
 
 ## Запуск
 
+Нужен Python 3.10 или новее. Проверить системный:
+
 ```bash
-git clone <репозиторий> /opt/funpay-watch
-cd /opt/funpay-watch
-python3 -m venv .venv
-.venv/bin/pip install -r requirements.txt
-cp .env.example .env      # вписать BOT_TOKEN и OWNER_ID
-.venv/bin/python -m funpay_watch
+/usr/bin/python3 --version
 ```
 
-Токен берётся у `@BotFather`, свой user id — у `@userinfobot`.
+Забрать код и собрать окружение:
+
+```bash
+sudo mkdir -p /opt/funpay-watch
+sudo chown $USER:$USER /opt/funpay-watch
+git clone <репозиторий> /opt/funpay-watch
+cd /opt/funpay-watch
+
+sudo apt install -y python3-venv
+/usr/bin/python3 -m venv .venv
+.venv/bin/pip install -r requirements.txt
+```
+
+Путь `/usr/bin/python3` указан полностью не для красоты. Если на сервере стоит
+pyenv, короткое `python3` подсунет интерпретатор из `/root/.pyenv`, а туда
+пользователю службы хода нет: домашняя папка root закрыта правами `drwx------`.
+Служба тогда не стартует с ошибкой `203/EXEC`.
+
+Настройки. Токен берётся у `@BotFather`, свой user id — у `@userinfobot`:
+
+```bash
+cp .env.example .env
+nano .env
+```
+
+Разовая проверка. Бот должен ответить на `/start` в Telegram. Останови
+через `Ctrl+C`, иначе вторая копия не запустится: замок на базе не пустит.
+
+```bash
+.venv/bin/python -m funpay_watch
+```
 
 Как служба:
 
@@ -70,8 +97,14 @@ sudo useradd --system --home /opt/funpay-watch funpay
 sudo chown -R funpay:funpay /opt/funpay-watch
 sudo cp funpay-watch.service /etc/systemd/system/
 sudo systemctl enable --now funpay-watch
-journalctl -u funpay-watch -f
+journalctl -u funpay-watch -n 20
 ```
+
+Передача прав идёт **после** сборки окружения. Соберёшь под root и забудешь
+передать — служба не прочитает свои же файлы.
+
+В журнале первой строкой будет путь к базе. Убедись, что он ведёт
+в `/opt/funpay-watch`, и задавай пороги через `/set`.
 
 ## Тесты
 
